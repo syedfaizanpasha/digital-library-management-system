@@ -296,6 +296,23 @@ function BookDetails() {
             </button>
           )}
 
+          {book.title === "The Art of War" && (
+  <a
+    href="/pdfs/the-art-of-war.pdf"
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{
+      ...styles.button,
+      backgroundColor: "#7c3aed",
+      textDecoration: "none",
+      display: "inline-block",
+      marginRight: "10px",
+    }}
+  >
+    📖 Read PDF
+  </a>
+)}
+
           <br />
 
           <Link

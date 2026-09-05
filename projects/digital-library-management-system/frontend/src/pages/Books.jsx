@@ -7,8 +7,8 @@ function Books() {
 
   const [books, setBooks] = useState([]);
   const [search, setSearch] = useState(
-  searchParams.get("search") || ""
-);
+    searchParams.get("search") || ""
+  );
   const [category, setCategory] = useState("All Categories");
   const [loading, setLoading] = useState(true);
 
@@ -29,13 +29,16 @@ function Books() {
         console.error("Error fetching books:", error);
         setLoading(false);
       });
-  },[]);
+  }, []);
+
   // Search + category filter
   const filteredBooks = books.filter((book) => {
+    const searchText = search.toLowerCase();
+
     const matchesSearch =
-  book.title.toLowerCase().includes(search.toLowerCase()) ||
-  book.author.toLowerCase().includes(search.toLowerCase()) ||
-  (book.category || "").toLowerCase().includes(search.toLowerCase());
+      book.title.toLowerCase().includes(searchText) ||
+      book.author.toLowerCase().includes(searchText) ||
+      (book.category || "").toLowerCase().includes(searchText);
 
     const matchesCategory =
       category === "All Categories" ||
@@ -49,21 +52,104 @@ function Books() {
     ...new Set(books.map((book) => book.category)),
   ];
 
+  // Book cover colors/icons
+  const getBookStyle = (title) => {
+    const lowerTitle = title.toLowerCase();
+
+    if (lowerTitle.includes("atomic")) {
+      return {
+        background:
+          "linear-gradient(135deg, #0f172a, #334155)",
+        icon: "⚛️",
+      };
+    }
+
+    if (lowerTitle.includes("alchemist")) {
+      return {
+        background:
+          "linear-gradient(135deg, #92400e, #f59e0b)",
+        icon: "🧪",
+      };
+    }
+
+    if (lowerTitle.includes("war")) {
+      return {
+        background:
+          "linear-gradient(135deg, #450a0a, #991b1b)",
+        icon: "⚔️",
+      };
+    }
+
+    if (lowerTitle.includes("ego")) {
+      return {
+        background:
+          "linear-gradient(135deg, #312e81, #7c3aed)",
+        icon: "🧠",
+      };
+    }
+
+    if (lowerTitle.includes("clean code")) {
+      return {
+        background:
+          "linear-gradient(135deg, #064e3b, #059669)",
+        icon: "💻",
+      };
+    }
+
+    if (lowerTitle.includes("great gatsby")) {
+      return {
+        background:
+          "linear-gradient(135deg, #164e63, #0891b2)",
+        icon: "🎩",
+      };
+    }
+
+    if (lowerTitle.includes("rich dad")) {
+      return {
+        background:
+          "linear-gradient(135deg, #14532d, #16a34a)",
+        icon: "💰",
+      };
+    }
+
+    return {
+      background:
+        "linear-gradient(135deg, #1d4ed8, #60a5fa)",
+      icon: "📖",
+    };
+  };
+
   return (
     <div style={styles.page}>
+
+      {/* Header */}
       <div style={styles.header}>
-        <h1>📚 Our Books</h1>
-        <p>Explore our digital library collection</p>
+        <div style={styles.headerIcon}>📚</div>
+
+        <h1 style={styles.heading}>
+          Explore Our Library
+        </h1>
+
+        <p style={styles.subtitle}>
+          Discover books, expand your knowledge, and
+          start your next great read.
+        </p>
       </div>
 
+      {/* Search Area */}
       <div style={styles.searchArea}>
-        <input
-          type="text"
-          placeholder="Search books or authors..."
-          style={styles.search}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+
+        <div style={styles.searchBox}>
+          <span style={styles.searchIcon}>🔍</span>
+
+          <input
+            type="text"
+            placeholder="Search by title, author or category..."
+            style={styles.search}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
 
         <select
           style={styles.select}
@@ -80,52 +166,136 @@ function Books() {
         </select>
       </div>
 
+      {/* Result Count */}
+      {!loading && (
+        <div style={styles.resultInfo}>
+          <span>
+            Showing <strong>{filteredBooks.length}</strong>{" "}
+            {filteredBooks.length === 1 ? "book" : "books"}
+          </span>
+        </div>
+      )}
+
+      {/* Loading */}
       {loading ? (
-        <p style={styles.message}>Loading books...</p>
+        <p style={styles.message}>
+          📚 Loading books...
+        </p>
       ) : filteredBooks.length === 0 ? (
-        <p style={styles.message}>No books found.</p>
+        <div style={styles.noResults}>
+          <div style={styles.noResultsIcon}>🔎</div>
+
+          <h2>No books found</h2>
+
+          <p>
+            Try searching with a different title,
+            author, or category.
+          </p>
+        </div>
       ) : (
         <div style={styles.grid}>
+
           {filteredBooks.map((book) => {
             const available =
-              book.available_quantity > 0;
+              Number(book.available_quantity) > 0;
+
+            const cover = getBookStyle(book.title);
 
             return (
-              <div style={styles.card} key={book.id}>
-                <div style={styles.bookCover}>📖</div>
+              <div
+                style={styles.card}
+                key={book.id}
+              >
 
+                {/* Book Cover */}
+                <div
+                  style={{
+                    ...styles.bookCover,
+                    background: cover.background,
+                  }}
+                >
+                  <div style={styles.coverIcon}>
+                    {cover.icon}
+                  </div>
+
+                  <div style={styles.coverTitle}>
+                    {book.title}
+                  </div>
+
+                  <div style={styles.coverAuthor}>
+                    {book.author}
+                  </div>
+                </div>
+
+                {/* Card Content */}
                 <div style={styles.cardContent}>
-                  <span style={styles.category}>
-                    {book.category}
-                  </span>
+
+                  <div style={styles.topRow}>
+                    <span style={styles.category}>
+                      {book.category}
+                    </span>
+
+                    <span style={styles.bookId}>
+                      #{book.id}
+                    </span>
+                  </div>
 
                   <h2 style={styles.title}>
                     {book.title}
                   </h2>
 
                   <p style={styles.author}>
-                    By {book.author}
+                    By <strong>{book.author}</strong>
                   </p>
 
-                  <p
-                    style={{
-                      ...styles.status,
-                      color: available
-                        ? "#16a34a"
-                        : "#dc2626",
-                    }}
-                  >
-                    {available
-                      ? "● Available"
-                      : "● Currently Borrowed"}
-                  </p>
+                  <div style={styles.divider}></div>
 
+                  {/* Availability */}
+                  <div style={styles.infoRow}>
+
+                    <span style={styles.infoLabel}>
+                      Availability
+                    </span>
+
+                    <span
+                      style={{
+                        ...styles.status,
+                        color: available
+                          ? "#15803d"
+                          : "#dc2626",
+                        backgroundColor: available
+                          ? "#dcfce7"
+                          : "#fee2e2",
+                      }}
+                    >
+                      {available
+                        ? "● Available"
+                        : "● Borrowed"}
+                    </span>
+                  </div>
+
+                  {/* Copies */}
+                  <div style={styles.infoRow}>
+
+                    <span style={styles.infoLabel}>
+                      Copies Available
+                    </span>
+
+                    <strong style={styles.copies}>
+                      {book.available_quantity}
+                    </strong>
+                  </div>
+
+                  {/* Button */}
                   <button
                     style={{
                       ...styles.button,
                       backgroundColor: available
                         ? "#2563eb"
                         : "#9ca3af",
+                      cursor: available
+                        ? "pointer"
+                        : "not-allowed",
                     }}
                     disabled={!available}
                     onClick={() =>
@@ -135,13 +305,15 @@ function Books() {
                     }
                   >
                     {available
-                      ? "View Book"
-                      : "Unavailable"}
+                      ? "View Book →"
+                      : "Currently Unavailable"}
                   </button>
+
                 </div>
               </div>
             );
           })}
+
         </div>
       )}
     </div>
@@ -151,8 +323,9 @@ function Books() {
 const styles = {
   page: {
     minHeight: "100vh",
-    padding: "50px 8%",
-    backgroundColor: "#f8fafc",
+    padding: "55px 7%",
+    background:
+      "linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)",
     fontFamily: "Arial, sans-serif",
   },
 
@@ -161,93 +334,217 @@ const styles = {
     marginBottom: "40px",
   },
 
+  headerIcon: {
+    fontSize: "48px",
+    marginBottom: "8px",
+  },
+
+  heading: {
+    fontSize: "38px",
+    margin: "0",
+    color: "#111827",
+    fontWeight: "800",
+  },
+
+  subtitle: {
+    fontSize: "17px",
+    color: "#64748b",
+    marginTop: "12px",
+  },
+
   searchArea: {
     display: "flex",
     gap: "15px",
-    maxWidth: "900px",
-    margin: "0 auto 40px",
+    maxWidth: "1000px",
+    margin: "0 auto 20px",
+    flexWrap: "wrap",
+  },
+
+  searchBox: {
+    flex: "1 1 400px",
+    display: "flex",
+    alignItems: "center",
+    backgroundColor: "white",
+    border: "1px solid #dbe2ea",
+    borderRadius: "12px",
+    padding: "0 15px",
+    boxShadow: "0 4px 15px rgba(15,23,42,0.05)",
+  },
+
+  searchIcon: {
+    fontSize: "18px",
   },
 
   search: {
-    flex: 1,
-    padding: "15px",
-    border: "1px solid #d1d5db",
-    borderRadius: "8px",
-    fontSize: "16px",
+    width: "100%",
+    border: "none",
+    outline: "none",
+    padding: "16px 12px",
+    fontSize: "15px",
+    backgroundColor: "transparent",
   },
 
   select: {
+    flex: "0 1 220px",
     padding: "15px",
-    border: "1px solid #d1d5db",
-    borderRadius: "8px",
+    border: "1px solid #dbe2ea",
+    borderRadius: "12px",
     backgroundColor: "white",
-    fontSize: "16px",
+    fontSize: "15px",
+    color: "#374151",
+    cursor: "pointer",
+    outline: "none",
+  },
+
+  resultInfo: {
+    maxWidth: "1000px",
+    margin: "0 auto 25px",
+    color: "#64748b",
+    fontSize: "14px",
   },
 
   grid: {
     display: "grid",
     gridTemplateColumns:
-      "repeat(auto-fit, minmax(280px, 1fr))",
-    gap: "25px",
+      "repeat(auto-fit, minmax(270px, 1fr))",
+    gap: "28px",
   },
 
   card: {
     backgroundColor: "white",
-    borderRadius: "15px",
+    borderRadius: "18px",
     overflow: "hidden",
-    boxShadow: "0 5px 20px rgba(0,0,0,0.08)",
+    boxShadow: "0 8px 25px rgba(15,23,42,0.08)",
+    border: "1px solid #e5e7eb",
+    transition: "transform 0.2s ease",
   },
 
   bookCover: {
-    height: "180px",
+    height: "235px",
+    padding: "25px",
     display: "flex",
+    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#2563eb",
-    fontSize: "70px",
+    textAlign: "center",
+    color: "white",
+  },
+
+  coverIcon: {
+    fontSize: "55px",
+    marginBottom: "15px",
+  },
+
+  coverTitle: {
+    fontSize: "22px",
+    fontWeight: "800",
+    lineHeight: "1.25",
+    textShadow: "0 2px 5px rgba(0,0,0,0.25)",
+  },
+
+  coverAuthor: {
+    fontSize: "13px",
+    marginTop: "10px",
+    opacity: "0.9",
   },
 
   cardContent: {
     padding: "22px",
   },
 
+  topRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "10px",
+  },
+
   category: {
-    fontSize: "13px",
+    fontSize: "12px",
     color: "#2563eb",
-    fontWeight: "bold",
+    backgroundColor: "#eff6ff",
+    padding: "6px 10px",
+    borderRadius: "20px",
+    fontWeight: "700",
+  },
+
+  bookId: {
+    fontSize: "12px",
+    color: "#94a3b8",
   },
 
   title: {
     fontSize: "21px",
-    margin: "10px 0",
+    margin: "12px 0 7px",
     color: "#111827",
+    lineHeight: "1.3",
   },
 
   author: {
-    color: "#6b7280",
+    color: "#64748b",
+    margin: "0",
+    fontSize: "14px",
+  },
+
+  divider: {
+    height: "1px",
+    backgroundColor: "#e5e7eb",
+    margin: "18px 0",
+  },
+
+  infoRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "12px",
+    fontSize: "13px",
+  },
+
+  infoLabel: {
+    color: "#64748b",
   },
 
   status: {
-    fontWeight: "bold",
-    marginTop: "15px",
+    fontSize: "11px",
+    fontWeight: "700",
+    padding: "6px 9px",
+    borderRadius: "20px",
+  },
+
+  copies: {
+    color: "#111827",
   },
 
   button: {
     width: "100%",
-    padding: "12px",
+    padding: "13px",
     border: "none",
-    borderRadius: "8px",
+    borderRadius: "10px",
     color: "white",
     fontSize: "15px",
-    cursor: "pointer",
-    marginTop: "10px",
+    fontWeight: "700",
+    marginTop: "8px",
   },
 
   message: {
     textAlign: "center",
     fontSize: "18px",
-    color: "#6b7280",
-    marginTop: "50px",
+    color: "#64748b",
+    marginTop: "60px",
+  },
+
+  noResults: {
+    textAlign: "center",
+    backgroundColor: "white",
+    maxWidth: "600px",
+    margin: "50px auto",
+    padding: "50px 20px",
+    borderRadius: "18px",
+    boxShadow: "0 8px 25px rgba(15,23,42,0.06)",
+  },
+
+  noResultsIcon: {
+    fontSize: "45px",
   },
 };
 

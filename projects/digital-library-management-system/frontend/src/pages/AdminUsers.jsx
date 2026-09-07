@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
@@ -17,7 +18,7 @@ function AdminUsers() {
       setError("");
 
       const response = await fetch(
-        "http://localhost:5000/api/users",
+        `${API_URL}/api/users`,
         {
           method: "GET",
           headers: {
@@ -66,7 +67,7 @@ function AdminUsers() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/users/${id}`,
+        `${API_URL}/api/users`,
         {
           method: "DELETE",
           headers: {

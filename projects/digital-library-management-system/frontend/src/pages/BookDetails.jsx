@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -18,7 +19,7 @@ function BookDetails() {
 
   // Fetch book details
   const fetchBook = fetch(
-    `http://localhost:5000/api/books/${id}`
+    `${API_URL}/api/books/${id}`
   ).then((response) => {
     console.log("BOOK RESPONSE STATUS:", response.status);
 
@@ -32,7 +33,7 @@ function BookDetails() {
   // Fetch user's currently borrowed books
   const fetchBorrowedBooks = token
     ? fetch(
-        "http://localhost:5000/api/books/borrowed",
+        `${API_URL}/api/books/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -121,7 +122,7 @@ function BookDetails() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/books/${book.id}/borrow`,
+        `${API_URL}/api/books/${id}`,
         {
           method: "PUT",
           headers: {
@@ -167,7 +168,7 @@ function BookDetails() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/books/${book.id}/return`,
+        `${API_URL}/api/books/${id}`,
         {
           method: "PUT",
           headers: {

@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
@@ -11,8 +12,8 @@ function Statistics() {
   useEffect(() => {
     const fetchStatistics = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:5000/api/stats",
+        const response = await 
+        fetch(`${API_URL}/api/stats`,
           {
             headers: {
               Authorization: `Bearer ${user.token}`,

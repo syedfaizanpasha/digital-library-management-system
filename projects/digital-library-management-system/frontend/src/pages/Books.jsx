@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -14,7 +15,7 @@ function Books() {
 
   // Get books from backend
   useEffect(() => {
-    fetch("http://localhost:5000/api/books")
+    fetch(`${API_URL}/api/books`)
       .then((response) => {
         if (!response.ok) {
           throw new Error("Failed to fetch books");

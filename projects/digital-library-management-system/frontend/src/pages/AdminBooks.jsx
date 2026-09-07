@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
@@ -29,7 +30,7 @@ function AdminBooks() {
       setLoading(true);
 
       const response = await fetch(
-        "http://localhost:5000/api/books"
+        `${API_URL}/api/books`
       );
 
       const data = await response.json();
@@ -74,7 +75,7 @@ function AdminBooks() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/books",
+        `${API_URL}/api/books`,
         {
           method: "POST",
           headers: {
@@ -129,7 +130,7 @@ function AdminBooks() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/books/${id}`,
+        `${API_URL}/api/books/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -187,7 +188,7 @@ function AdminBooks() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/books/${editingBookId}`,
+        `${API_URL}/api/books/${editingBookId}`,
         {
           method: "PUT",
           headers: {

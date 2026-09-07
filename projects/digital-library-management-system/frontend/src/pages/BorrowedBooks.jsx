@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -15,7 +16,7 @@ const navigate = useNavigate([]);
   return;
 }
 
-    fetch("http://localhost:5000/api/books/borrowed", {
+    fetch(`${API_URL}/api/books/borrowed`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

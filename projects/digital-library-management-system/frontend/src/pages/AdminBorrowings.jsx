@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
@@ -17,7 +18,7 @@ function AdminBorrowings() {
       setError("");
 
       const response = await fetch(
-        "http://localhost:5000/api/books/admin/borrowings",
+        `${API_URL}/api/books/admin/borrowings`,
         {
           method: "GET",
           headers: {

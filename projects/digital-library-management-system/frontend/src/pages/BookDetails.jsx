@@ -17,71 +17,98 @@ function BookDetails() {
 
     const token = localStorage.getItem("token");
 
-    // Fetch book details
-    const fetchBook = fetch(
-      `${API_URL}/api/books/${id}`
-    ).then((response) => {
-      console.log(
-        "BOOK RESPONSE STATUS:",
-        response.status
-      );
+    // --------------------------------
+    // Fetch book FIRST
+    // --------------------------------
+    fetch(`${API_URL}/api/books/${id}`)
+      .then((response) => {
+        console.log(
+          "BOOK RESPONSE STATUS:",
+          response.status
+        );
 
-      if (!response.ok) {
-        throw new Error("Book not found");
-      }
+        if (!response.ok) {
+          throw new Error("Book not found");
+        }
 
-      return response.json();
-    });
-
-    // Fetch user's borrowed books
-    const fetchBorrowedBooks = token
-      ? fetch(`${API_URL}/api/books/borrowed`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }).then((response) => {
-          console.log(
-            "BORROWED RESPONSE STATUS:",
-            response.status
-          );
-
-          if (!response.ok) {
-            throw new Error(
-              "Failed to fetch borrowed books"
-            );
-          }
-
-          return response.json();
-        })
-      : Promise.resolve([]);
-
-    Promise.all([fetchBook, fetchBorrowedBooks])
-      .then(([bookData, borrowedData]) => {
+        return response.json();
+      })
+      .then((bookData) => {
         console.log("BOOK DATA:", bookData);
-        console.log(
-          "BORROWED DATA:",
-          borrowedData
-        );
 
+        // Book loaded successfully
         setBook(bookData);
-
-        const alreadyBorrowed = borrowedData.some(
-          (borrowedBook) =>
-            Number(borrowedBook.book_id) ===
-              Number(id) &&
-            !borrowedBook.return_date
-        );
-
-        console.log(
-          "USER ALREADY BORROWED:",
-          alreadyBorrowed
-        );
-
-        setUserBorrowed(alreadyBorrowed);
         setLoading(false);
+
+        // --------------------------------
+        // Check user's borrowed books separately
+        // --------------------------------
+        if (token) {
+          fetch(`${API_URL}/api/books/borrowed`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+            .then((response) => {
+              console.log(
+                "BORROWED RESPONSE STATUS:",
+                response.status
+              );
+
+              if (!response.ok) {
+                throw new Error(
+                  "Failed to fetch borrowed books"
+                );
+              }
+
+              return response.json();
+            })
+            .then((borrowedData) => {
+              console.log(
+                "BORROWED DATA:",
+                borrowedData
+              );
+
+              const borrowedList = Array.isArray(
+                borrowedData
+              )
+                ? borrowedData
+                : [];
+
+              const alreadyBorrowed =
+                borrowedList.some(
+                  (borrowedBook) =>
+                    Number(borrowedBook.book_id) ===
+                      Number(id) &&
+                    !borrowedBook.return_date
+                );
+
+              console.log(
+                "USER ALREADY BORROWED:",
+                alreadyBorrowed
+              );
+
+              setUserBorrowed(
+                alreadyBorrowed
+              );
+            })
+            .catch((error) => {
+              // Do NOT break the book page
+              console.error(
+                "BORROWED BOOKS ERROR:",
+                error
+              );
+
+              setUserBorrowed(false);
+            });
+        }
       })
       .catch((error) => {
-        console.error("BOOK ERROR:", error);
+        console.error(
+          "BOOK ERROR:",
+          error
+        );
+
         setLoading(false);
       });
   }, [id]);
@@ -105,7 +132,10 @@ function BookDetails() {
       <div style={styles.page}>
         <h2>Book not found</h2>
 
-        <Link to="/books" style={styles.back}>
+        <Link
+          to="/books"
+          style={styles.back}
+        >
           ← Back to Books
         </Link>
       </div>
@@ -113,16 +143,23 @@ function BookDetails() {
   }
 
   // ===============================
-  // Availability
+  // Available
+  // Supports both local and Railway
   // ===============================
+  const availableQuantity =
+    book.available !== undefined
+      ? Number(book.available)
+      : Number(book.available_quantity);
+
   const available =
-    Number(book.available) > 0;
+    availableQuantity > 0;
 
   // ===============================
   // Borrow Book
   // ===============================
   const borrowBook = async () => {
-    const token = localStorage.getItem("token");
+    const token =
+      localStorage.getItem("token");
 
     if (!token) {
       alert("Please login first.");
@@ -140,7 +177,8 @@ function BookDetails() {
         }
       );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (!response.ok) {
         alert(
@@ -150,17 +188,28 @@ function BookDetails() {
         return;
       }
 
-      // Decrease available quantity
+      // Update availability
       setBook((prev) => ({
         ...prev,
+
         available:
-          Number(prev.available) - 1,
+          prev.available !== undefined
+            ? Number(prev.available) - 1
+            : prev.available,
+
+        available_quantity:
+          prev.available_quantity !== undefined
+            ? Number(
+                prev.available_quantity
+              ) - 1
+            : prev.available_quantity,
       }));
 
-      // User has now borrowed this book
       setUserBorrowed(true);
 
-      alert("Book borrowed successfully!");
+      alert(
+        "Book borrowed successfully!"
+      );
     } catch (error) {
       console.error(error);
 
@@ -174,7 +223,8 @@ function BookDetails() {
   // Return Book
   // ===============================
   const returnBook = async () => {
-    const token = localStorage.getItem("token");
+    const token =
+      localStorage.getItem("token");
 
     if (!token) {
       alert("Please login first.");
@@ -192,7 +242,8 @@ function BookDetails() {
         }
       );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (!response.ok) {
         alert(
@@ -202,17 +253,28 @@ function BookDetails() {
         return;
       }
 
-      // Increase available quantity
+      // Update availability
       setBook((prev) => ({
         ...prev,
+
         available:
-          Number(prev.available) + 1,
+          prev.available !== undefined
+            ? Number(prev.available) + 1
+            : prev.available,
+
+        available_quantity:
+          prev.available_quantity !== undefined
+            ? Number(
+                prev.available_quantity
+              ) + 1
+            : prev.available_quantity,
       }));
 
-      // User no longer has this book
       setUserBorrowed(false);
 
-      alert("Book returned successfully!");
+      alert(
+        "Book returned successfully!"
+      );
     } catch (error) {
       console.error(error);
 
@@ -251,17 +313,20 @@ function BookDetails() {
 
           <p style={styles.info}>
             <strong>ISBN:</strong>{" "}
-            {book.isbn || "Not available"}
+            {book.isbn ||
+              "Not available"}
           </p>
 
           <p style={styles.info}>
-            <strong>Total Quantity:</strong>{" "}
+            <strong>
+              Total Quantity:
+            </strong>{" "}
             {book.quantity}
           </p>
 
           <p style={styles.info}>
             <strong>Available:</strong>{" "}
-            {book.available}
+            {availableQuantity}
           </p>
 
           {/* Availability Status */}
@@ -280,14 +345,15 @@ function BookDetails() {
           </p>
 
           {/* ===============================
-              BUTTON
+              Borrow / Return Button
              =============================== */}
 
           {userBorrowed ? (
             <button
               style={{
                 ...styles.button,
-                backgroundColor: "#16a34a",
+                backgroundColor:
+                  "#16a34a",
                 cursor: "pointer",
               }}
               onClick={returnBook}
@@ -315,14 +381,16 @@ function BookDetails() {
           )}
 
           {/* PDF for The Art of War */}
-          {book.title === "The Art of War" && (
+          {book.title ===
+            "The Art of War" && (
             <a
               href="/pdfs/the-art-of-war.pdf"
               target="_blank"
               rel="noopener noreferrer"
               style={{
                 ...styles.button,
-                backgroundColor: "#7c3aed",
+                backgroundColor:
+                  "#7c3aed",
                 textDecoration: "none",
                 display: "inline-block",
                 marginLeft: "10px",
@@ -356,7 +424,8 @@ const styles = {
     minHeight: "100vh",
     padding: "60px 8%",
     backgroundColor: "#f8fafc",
-    fontFamily: "Arial, sans-serif",
+    fontFamily:
+      "Arial, sans-serif",
   },
 
   card: {
@@ -367,7 +436,8 @@ const styles = {
     borderRadius: "16px",
     display: "flex",
     gap: "50px",
-    boxShadow: "0 8px 30px rgba(0,0,0,0.08)",
+    boxShadow:
+      "0 8px 30px rgba(0,0,0,0.08)",
   },
 
   cover: {
@@ -389,7 +459,8 @@ const styles = {
   category: {
     color: "#2563eb",
     fontWeight: "bold",
-    textTransform: "uppercase",
+    textTransform:
+      "uppercase",
   },
 
   title: {

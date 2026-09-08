@@ -198,8 +198,13 @@ function Books() {
 
           {filteredBooks.map((book) => {
 
-            // FIXED: Railway database uses "available"
-            const available = Number(book.available) > 0;
+            // Supports both local and Railway database
+const availableQuantity =
+  book.available !== undefined
+    ? Number(book.available)
+    : Number(book.available_quantity);
+
+const available = availableQuantity > 0;
 
             const cover = getBookStyle(book.title);
 
@@ -284,7 +289,7 @@ function Books() {
                     </span>
 
                     <strong style={styles.copies}>
-                      {book.available}
+                      {availableQuantity}
                     </strong>
                   </div>
 

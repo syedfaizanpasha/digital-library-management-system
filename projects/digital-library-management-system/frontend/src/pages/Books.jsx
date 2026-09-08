@@ -197,8 +197,9 @@ function Books() {
         <div style={styles.grid}>
 
           {filteredBooks.map((book) => {
-            const available =
-              Number(book.available_quantity) > 0;
+
+            // FIXED: Railway database uses "available"
+            const available = Number(book.available) > 0;
 
             const cover = getBookStyle(book.title);
 
@@ -283,7 +284,7 @@ function Books() {
                     </span>
 
                     <strong style={styles.copies}>
-                      {book.available_quantity}
+                      {book.available}
                     </strong>
                   </div>
 

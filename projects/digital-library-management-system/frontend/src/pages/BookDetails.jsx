@@ -12,73 +12,79 @@ function BookDetails() {
   // ===============================
   // Fetch Book Details
   // ===============================
- useEffect(() => {
-  console.log("BOOK ID:", id);
+  useEffect(() => {
+    console.log("BOOK ID:", id);
 
-  const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
-  // Fetch book details
-  const fetchBook = fetch(
-    `${API_URL}/api/books/${id}`
-  ).then((response) => {
-    console.log("BOOK RESPONSE STATUS:", response.status);
+    // Fetch book details
+    const fetchBook = fetch(
+      `${API_URL}/api/books/${id}`
+    ).then((response) => {
+      console.log(
+        "BOOK RESPONSE STATUS:",
+        response.status
+      );
 
-    if (!response.ok) {
-      throw new Error("Book not found");
-    }
+      if (!response.ok) {
+        throw new Error("Book not found");
+      }
 
-    return response.json();
-  });
+      return response.json();
+    });
 
-  // Fetch user's currently borrowed books
-  const fetchBorrowedBooks = token
-    ? fetch(
-        `${API_URL}/api/books/${id}`,
-        {
+    // Fetch user's borrowed books
+    const fetchBorrowedBooks = token
+      ? fetch(`${API_URL}/api/books/borrowed`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
-      ).then((response) => {
+        }).then((response) => {
+          console.log(
+            "BORROWED RESPONSE STATUS:",
+            response.status
+          );
+
+          if (!response.ok) {
+            throw new Error(
+              "Failed to fetch borrowed books"
+            );
+          }
+
+          return response.json();
+        })
+      : Promise.resolve([]);
+
+    Promise.all([fetchBook, fetchBorrowedBooks])
+      .then(([bookData, borrowedData]) => {
+        console.log("BOOK DATA:", bookData);
         console.log(
-          "BORROWED RESPONSE STATUS:",
-          response.status
+          "BORROWED DATA:",
+          borrowedData
         );
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch borrowed books");
-        }
+        setBook(bookData);
 
-        return response.json();
+        const alreadyBorrowed = borrowedData.some(
+          (borrowedBook) =>
+            Number(borrowedBook.book_id) ===
+              Number(id) &&
+            !borrowedBook.return_date
+        );
+
+        console.log(
+          "USER ALREADY BORROWED:",
+          alreadyBorrowed
+        );
+
+        setUserBorrowed(alreadyBorrowed);
+        setLoading(false);
       })
-    : Promise.resolve([]);
-
-  Promise.all([fetchBook, fetchBorrowedBooks])
-    .then(([bookData, borrowedData]) => {
-      console.log("BOOK DATA:", bookData);
-      console.log("BORROWED DATA:", borrowedData);
-
-      setBook(bookData);
-
-      const alreadyBorrowed = borrowedData.some(
-        (borrowedBook) =>
-          Number(borrowedBook.book_id) === Number(id) &&
-          borrowedBook.status === "borrowed"
-      );
-
-      console.log(
-        "USER ALREADY BORROWED:",
-        alreadyBorrowed
-      );
-
-      setUserBorrowed(alreadyBorrowed);
-      setLoading(false);
-    })
-    .catch((error) => {
-      console.error("BOOK ERROR:", error);
-      setLoading(false);
-    });
-}, [id]);
+      .catch((error) => {
+        console.error("BOOK ERROR:", error);
+        setLoading(false);
+      });
+  }, [id]);
 
   // ===============================
   // Loading
@@ -106,8 +112,11 @@ function BookDetails() {
     );
   }
 
-  // Available is calculated from book state
-  const available = book.available_quantity > 0;
+  // ===============================
+  // Availability
+  // ===============================
+  const available =
+    Number(book.available) > 0;
 
   // ===============================
   // Borrow Book
@@ -122,7 +131,7 @@ function BookDetails() {
 
     try {
       const response = await fetch(
-        `${API_URL}/api/books/${id}`,
+        `${API_URL}/api/books/${id}/borrow`,
         {
           method: "PUT",
           headers: {
@@ -134,15 +143,18 @@ function BookDetails() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.message || "Failed to borrow book.");
+        alert(
+          data.message ||
+            "Failed to borrow book."
+        );
         return;
       }
 
       // Decrease available quantity
       setBook((prev) => ({
         ...prev,
-        available_quantity:
-          Number(prev.available_quantity) - 1,
+        available:
+          Number(prev.available) - 1,
       }));
 
       // User has now borrowed this book
@@ -151,7 +163,10 @@ function BookDetails() {
       alert("Book borrowed successfully!");
     } catch (error) {
       console.error(error);
-      alert("Something went wrong while borrowing the book.");
+
+      alert(
+        "Something went wrong while borrowing the book."
+      );
     }
   };
 
@@ -168,7 +183,7 @@ function BookDetails() {
 
     try {
       const response = await fetch(
-        `${API_URL}/api/books/${id}`,
+        `${API_URL}/api/books/${id}/return`,
         {
           method: "PUT",
           headers: {
@@ -180,29 +195,30 @@ function BookDetails() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.message || "Failed to return book.");
+        alert(
+          data.message ||
+            "Failed to return book."
+        );
         return;
       }
 
       // Increase available quantity
       setBook((prev) => ({
         ...prev,
-        available_quantity:
-          Number(prev.available_quantity) + 1,
+        available:
+          Number(prev.available) + 1,
       }));
 
-      // IMPORTANT:
       // User no longer has this book
       setUserBorrowed(false);
-
-      // DO NOT use setAvailable(true)
-      // because available is calculated automatically
-      // from book.available_quantity.
 
       alert("Book returned successfully!");
     } catch (error) {
       console.error(error);
-      alert("Something went wrong while returning the book.");
+
+      alert(
+        "Something went wrong while returning the book."
+      );
     }
   };
 
@@ -235,7 +251,7 @@ function BookDetails() {
 
           <p style={styles.info}>
             <strong>ISBN:</strong>{" "}
-            {book.isbn}
+            {book.isbn || "Not available"}
           </p>
 
           <p style={styles.info}>
@@ -245,7 +261,7 @@ function BookDetails() {
 
           <p style={styles.info}>
             <strong>Available:</strong>{" "}
-            {book.available_quantity}
+            {book.available}
           </p>
 
           {/* Availability Status */}
@@ -272,6 +288,7 @@ function BookDetails() {
               style={{
                 ...styles.button,
                 backgroundColor: "#16a34a",
+                cursor: "pointer",
               }}
               onClick={returnBook}
             >
@@ -297,22 +314,23 @@ function BookDetails() {
             </button>
           )}
 
+          {/* PDF for The Art of War */}
           {book.title === "The Art of War" && (
-  <a
-    href="/pdfs/the-art-of-war.pdf"
-    target="_blank"
-    rel="noopener noreferrer"
-    style={{
-      ...styles.button,
-      backgroundColor: "#7c3aed",
-      textDecoration: "none",
-      display: "inline-block",
-      marginRight: "10px",
-    }}
-  >
-    📖 Read PDF
-  </a>
-)}
+            <a
+              href="/pdfs/the-art-of-war.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                ...styles.button,
+                backgroundColor: "#7c3aed",
+                textDecoration: "none",
+                display: "inline-block",
+                marginLeft: "10px",
+              }}
+            >
+              📖 Read PDF
+            </a>
+          )}
 
           <br />
 

@@ -19,13 +19,30 @@ router.get(
     const sql = `
       SELECT
         (SELECT COUNT(*) FROM books) AS total_books,
-        (SELECT COALESCE(SUM(quantity), 0) FROM books) AS total_copies,
-        (SELECT COALESCE(SUM(available_quantity), 0) FROM books) AS available_copies,
-        (SELECT COALESCE(SUM(quantity - available_quantity), 0) FROM books) AS borrowed_copies,
+
+        (SELECT COALESCE(SUM(quantity), 0)
+         FROM books) AS total_copies,
+
+        (SELECT COALESCE(SUM(available), 0)
+         FROM books) AS available_copies,
+
+        (SELECT COALESCE(SUM(quantity - available), 0)
+         FROM books) AS borrowed_copies,
+
         (SELECT COUNT(*) FROM users) AS total_users,
-        (SELECT COUNT(*) FROM borrow_records) AS total_borrow_records,
-        (SELECT COUNT(*) FROM borrow_records WHERE status = 'borrowed') AS active_borrowings,
-        (SELECT COUNT(*) FROM borrow_records WHERE status = 'returned') AS returned_books
+
+        (SELECT COUNT(*) FROM borrow_records)
+        AS total_borrow_records,
+
+        (SELECT COUNT(*)
+         FROM borrow_records
+         WHERE return_date IS NULL)
+        AS active_borrowings,
+
+        (SELECT COUNT(*)
+         FROM borrow_records
+         WHERE return_date IS NOT NULL)
+        AS returned_books
     `;
 
     db.query(sql, (err, results) => {

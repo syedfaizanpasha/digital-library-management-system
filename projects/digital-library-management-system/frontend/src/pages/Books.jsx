@@ -13,13 +13,13 @@ function Books() {
   const [category, setCategory] = useState("All Categories");
   const [loading, setLoading] = useState(true);
 
-  // Get books from backend
   useEffect(() => {
     fetch(`${API_URL}/api/books`)
       .then((response) => {
         if (!response.ok) {
           throw new Error("Failed to fetch books");
         }
+
         return response.json();
       })
       .then((data) => {
@@ -53,71 +53,39 @@ function Books() {
     ...new Set(books.map((book) => book.category)),
   ];
 
-  // Book cover colors/icons
-  const getBookStyle = (title) => {
+  // Real book cover images
+  const getBookCover = (title) => {
     const lowerTitle = title.toLowerCase();
 
-    if (lowerTitle.includes("atomic")) {
-      return {
-        background:
-          "linear-gradient(135deg, #0f172a, #334155)",
-        icon: "⚛️",
-      };
-    }
-
     if (lowerTitle.includes("alchemist")) {
-      return {
-        background:
-          "linear-gradient(135deg, #92400e, #f59e0b)",
-        icon: "🧪",
-      };
+      return "https://covers.openlibrary.org/b/isbn/9780061122415-L.jpg";
     }
 
-    if (lowerTitle.includes("war")) {
-      return {
-        background:
-          "linear-gradient(135deg, #450a0a, #991b1b)",
-        icon: "⚔️",
-      };
-    }
-
-    if (lowerTitle.includes("ego")) {
-      return {
-        background:
-          "linear-gradient(135deg, #312e81, #7c3aed)",
-        icon: "🧠",
-      };
+    if (lowerTitle.includes("atomic")) {
+      return "https://covers.openlibrary.org/b/isbn/9780735211292-L.jpg";
     }
 
     if (lowerTitle.includes("clean code")) {
-      return {
-        background:
-          "linear-gradient(135deg, #064e3b, #059669)",
-        icon: "💻",
-      };
+      return "https://covers.openlibrary.org/b/isbn/9780132350884-L.jpg";
     }
 
     if (lowerTitle.includes("great gatsby")) {
-      return {
-        background:
-          "linear-gradient(135deg, #164e63, #0891b2)",
-        icon: "🎩",
-      };
+      return "https://covers.openlibrary.org/b/isbn/9780743273565-L.jpg";
     }
 
     if (lowerTitle.includes("rich dad")) {
-      return {
-        background:
-          "linear-gradient(135deg, #14532d, #16a34a)",
-        icon: "💰",
-      };
+      return "https://covers.openlibrary.org/b/isbn/9781612680194-L.jpg";
     }
 
-    return {
-      background:
-        "linear-gradient(135deg, #1d4ed8, #60a5fa)",
-      icon: "📖",
-    };
+    if (lowerTitle.includes("art of war")) {
+      return "https://covers.openlibrary.org/b/isbn/9780903203210-L.jpg";
+    }
+
+    if (lowerTitle.includes("ego")) {
+      return "https://covers.openlibrary.org/b/isbn/9781591847816-L.jpg";
+    }
+
+    return null;
   };
 
   return (
@@ -199,14 +167,14 @@ function Books() {
           {filteredBooks.map((book) => {
 
             // Supports both local and Railway database
-const availableQuantity =
-  book.available !== undefined
-    ? Number(book.available)
-    : Number(book.available_quantity);
+            const availableQuantity =
+              book.available !== undefined
+                ? Number(book.available)
+                : Number(book.available_quantity);
 
-const available = availableQuantity > 0;
+            const available = availableQuantity > 0;
 
-            const cover = getBookStyle(book.title);
+            const cover = getBookCover(book.title);
 
             return (
               <div
@@ -215,29 +183,41 @@ const available = availableQuantity > 0;
               >
 
                 {/* Book Cover */}
-                <div
-                  style={{
-                    ...styles.bookCover,
-                    background: cover.background,
-                  }}
-                >
-                  <div style={styles.coverIcon}>
-                    {cover.icon}
-                  </div>
+                <div style={styles.bookCover}>
 
-                  <div style={styles.coverTitle}>
-                    {book.title}
-                  </div>
+                  {cover ? (
+                    <>
+                      <img
+                        src={cover}
+                        alt={`${book.title} book cover`}
+                        style={styles.coverImage}
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
 
-                  <div style={styles.coverAuthor}>
-                    {book.author}
-                  </div>
+                          if (e.currentTarget.nextElementSibling) {
+                            e.currentTarget.nextElementSibling.style.display =
+                              "flex";
+                          }
+                        }}
+                      />
+
+                      <div style={styles.coverFallback}>
+                        📖
+                      </div>
+                    </>
+                  ) : (
+                    <div style={styles.coverFallback}>
+                      📖
+                    </div>
+                  )}
+
                 </div>
 
                 {/* Card Content */}
                 <div style={styles.cardContent}>
 
                   <div style={styles.topRow}>
+
                     <span style={styles.category}>
                       {book.category}
                     </span>
@@ -245,6 +225,7 @@ const available = availableQuantity > 0;
                     <span style={styles.bookId}>
                       #{book.id}
                     </span>
+
                   </div>
 
                   <h2 style={styles.title}>
@@ -279,6 +260,7 @@ const available = availableQuantity > 0;
                         ? "● Available"
                         : "● Borrowed"}
                     </span>
+
                   </div>
 
                   {/* Copies */}
@@ -291,6 +273,7 @@ const available = availableQuantity > 0;
                     <strong style={styles.copies}>
                       {availableQuantity}
                     </strong>
+
                   </div>
 
                   {/* Button */}
@@ -317,12 +300,14 @@ const available = availableQuantity > 0;
                   </button>
 
                 </div>
+
               </div>
             );
           })}
 
         </div>
       )}
+
     </div>
   );
 }
@@ -428,32 +413,33 @@ const styles = {
 
   bookCover: {
     height: "235px",
-    padding: "25px",
+    padding: "15px",
     display: "flex",
-    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    textAlign: "center",
-    color: "white",
+    backgroundColor: "#f8fafc",
+    overflow: "hidden",
   },
 
-  coverIcon: {
-    fontSize: "55px",
-    marginBottom: "15px",
+  coverImage: {
+    width: "150px",
+    height: "205px",
+    objectFit: "cover",
+    borderRadius: "6px",
+    boxShadow: "0 8px 18px rgba(15,23,42,0.18)",
   },
 
-  coverTitle: {
-    fontSize: "22px",
-    fontWeight: "800",
-    lineHeight: "1.25",
-    textShadow: "0 2px 5px rgba(0,0,0,0.25)",
-  },
-
-  coverAuthor: {
-    fontSize: "13px",
-    marginTop: "10px",
-    opacity: "0.9",
-  },
+  coverFallback: {
+  width: "150px",
+  height: "205px",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: "55px",
+  background:
+    "linear-gradient(135deg, #1d4ed8, #60a5fa)",
+  borderRadius: "6px",
+  display: "none",
+},
 
   cardContent: {
     padding: "22px",
